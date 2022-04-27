@@ -10,9 +10,29 @@ export default function UnitLogger(initialLogEnabled: boolean = true) {
   let logEnabled = initialLogEnabled
   let recordEnabled = false
 
+  function debug(s: unknown) {
+    if (logEnabled) console.debug(s)
+    if (recordEnabled) buffer.push(["debug", s])
+  }
+
   function log(s: unknown) {
     if (logEnabled) console.log(s)
     if (recordEnabled) buffer.push(["log", s])
+  }
+
+  function info(s: unknown) {
+    if (logEnabled) console.info(s)
+    if (recordEnabled) buffer.push(["info", s])
+  }
+
+  function warn(s: unknown) {
+    if (logEnabled) console.warn(s)
+    if (recordEnabled) buffer.push(["warn", s])
+  }
+
+  function error(s: unknown) {
+    if (logEnabled) console.warn(s)
+    if (recordEnabled) buffer.push(["error", s])
   }
 
   /**
@@ -118,7 +138,11 @@ export default function UnitLogger(initialLogEnabled: boolean = true) {
   }
 
   return {
+    debug,
     log,
+    info,
+    warn,
+    error,
     enable,
     disable,
     startRecording,
