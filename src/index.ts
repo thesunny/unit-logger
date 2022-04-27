@@ -114,6 +114,29 @@ export default function UnitLogger(initialLogEnabled: boolean = true) {
    * The language is meant to evoke that it **collects** the record for itself
    * (i.e. it is not shareing it).
    */
+  function silence(fn: () => void): void
+  function silence(fn: () => Promise<void>): Promise<void>
+  function silence(fn: () => void | Promise<void>): void | Promise<void> {
+    const wasLogEnabled = logEnabled
+    logEnabled = false
+    const promiseOrResult = record(fn)
+    if (promiseOrResult instanceof Promise) {
+      return promiseOrResult.then((r) => {
+        logEnabled = wasLogEnabled
+        return r
+      })
+    } else {
+      logEnabled = wasLogEnabled
+    }
+  }
+
+  /**
+   * Collects logs while the passed in function executes and then return it
+   * while hiding any `console.log` output even if the console is enabled.
+   *
+   * The language is meant to evoke that it **collects** the record for itself
+   * (i.e. it is not shareing it).
+   */
   function collect(fn: () => void, complete?: boolean): unknown[]
   function collect(
     fn: () => Promise<void>,
@@ -149,6 +172,7 @@ export default function UnitLogger(initialLogEnabled: boolean = true) {
     stopRecording,
     playRecording,
     record,
+    silence,
     collect,
   }
 }

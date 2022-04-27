@@ -117,6 +117,28 @@ describe("UnitLogger", () => {
     })
   })
 
+  describe("silence", () => {
+    it("should collect", async () => {
+      logger.log(1)
+      logger.silence(() => {
+        logger.log(2)
+        logger.log(3)
+      })
+      logger.log(4)
+      expect(console.log).toHaveBeenCalledTimes(2)
+    })
+
+    it("should collect async", async () => {
+      logger.log(1)
+      await logger.collect(async () => {
+        logger.log(2)
+        logger.log(3)
+      })
+      logger.log(4)
+      expect(console.log).toHaveBeenCalledTimes(2)
+    })
+  })
+
   describe("collect", () => {
     it("should collect", async () => {
       logger.log(1)
