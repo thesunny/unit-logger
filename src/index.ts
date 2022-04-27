@@ -1,11 +1,18 @@
 export default function UnitLogger(initialLogEnabled: boolean = true) {
-  let buffer: unknown[] = []
+  /**
+   * https://stackoverflow.com/questions/21876461/difference-between-console-log-and-console-debug
+   */
+  type LogLevel = "debug" | "log" | "info" | "warn" | "error"
+
+  type LogEntry = [LogLevel, unknown]
+
+  let buffer: LogEntry[] = []
   let logEnabled = initialLogEnabled
   let recordEnabled = false
 
   function log(s: unknown) {
     if (logEnabled) console.log(s)
-    if (recordEnabled) buffer.push(s)
+    if (recordEnabled) buffer.push(["log", s])
   }
 
   /**
@@ -39,10 +46,14 @@ export default function UnitLogger(initialLogEnabled: boolean = true) {
   /**
    * Play recording of logging and clear the recording from the buffer
    */
-  function playRecording(): unknown[] {
+  function playRecording(complete = false): unknown[] {
     const oldBuffer = buffer
     buffer = []
-    return oldBuffer
+    if (complete) {
+      return oldBuffer
+    } else {
+      return oldBuffer.map((entry) => entry[1])
+    }
   }
 
   /**
@@ -54,21 +65,25 @@ export default function UnitLogger(initialLogEnabled: boolean = true) {
    * The language is meant to evoke that the logging is still happening to the
    * console (if it was on) and we are merely making a copy (recording) of it.
    */
-  function record(fn: () => void): unknown[]
-  function record(fn: () => Promise<void>): Promise<unknown[]>
+  function record(fn: () => void, complete?: boolean): unknown[]
   function record(
-    fn: () => void | Promise<void>
+    fn: () => Promise<void>,
+    complete?: boolean
+  ): Promise<unknown[]>
+  function record(
+    fn: () => void | Promise<void>,
+    complete = false
   ): unknown[] | Promise<unknown[]> {
     startRecording()
     const maybePromise = fn()
     if (maybePromise) {
       return maybePromise.then(() => {
         stopRecording()
-        return playRecording()
+        return playRecording(complete)
       })
     } else {
       stopRecording()
-      return playRecording()
+      return playRecording(complete)
     }
   }
 
@@ -79,14 +94,18 @@ export default function UnitLogger(initialLogEnabled: boolean = true) {
    * The language is meant to evoke that it **collects** the record for itself
    * (i.e. it is not shareing it).
    */
-  function collect(fn: () => void): unknown[]
-  function collect(fn: () => Promise<void>): Promise<unknown[]>
+  function collect(fn: () => void, complete?: boolean): unknown[]
   function collect(
-    fn: () => void | Promise<void>
+    fn: () => Promise<void>,
+    complete?: boolean
+  ): Promise<unknown[]>
+  function collect(
+    fn: () => void | Promise<void>,
+    complete = false
   ): unknown[] | Promise<unknown[]> {
     const wasLogEnabled = logEnabled
     logEnabled = false
-    const promiseOrResult = record(fn)
+    const promiseOrResult = record(fn, complete)
     if (promiseOrResult instanceof Promise) {
       return promiseOrResult.then((r) => {
         logEnabled = wasLogEnabled
