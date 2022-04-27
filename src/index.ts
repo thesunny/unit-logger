@@ -31,7 +31,7 @@ export default function UnitLogger(initialLogEnabled: boolean = true) {
   }
 
   function error(s: unknown) {
-    if (logEnabled) console.warn(s)
+    if (logEnabled) console.error(s)
     if (recordEnabled) buffer.push(["error", s])
   }
 

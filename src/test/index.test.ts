@@ -8,7 +8,7 @@ describe("UnitLogger", () => {
   let restore: ReturnType<typeof mockConsole>
 
   beforeEach(() => {
-    restore = mockConsole()
+    restore = mockConsole(["debug", "log", "info", "warn", "error"])
   })
 
   afterEach(() => {
