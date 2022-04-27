@@ -114,12 +114,14 @@ export default function UnitLogger(initialLogEnabled: boolean = true) {
    * The language is meant to evoke that it **collects** the record for itself
    * (i.e. it is not shareing it).
    */
-  function silence(fn: () => void): void
-  function silence(fn: () => Promise<void>): Promise<void>
-  function silence(fn: () => void | Promise<void>): void | Promise<void> {
+  function silence<T extends unknown>(fn: () => T): T
+  function silence<T extends Promise<unknown>>(fn: () => Promise<T>): T
+  function silence<T extends unknown>(
+    fn: () => T | Promise<T>
+  ): T | Promise<T> {
     const wasLogEnabled = logEnabled
     logEnabled = false
-    const promiseOrResult = record(fn)
+    const promiseOrResult: T | Promise<T> = fn()
     if (promiseOrResult instanceof Promise) {
       return promiseOrResult.then((r) => {
         logEnabled = wasLogEnabled
@@ -127,6 +129,7 @@ export default function UnitLogger(initialLogEnabled: boolean = true) {
       })
     } else {
       logEnabled = wasLogEnabled
+      return promiseOrResult
     }
   }
 
@@ -146,18 +149,7 @@ export default function UnitLogger(initialLogEnabled: boolean = true) {
     fn: () => void | Promise<void>,
     complete = false
   ): unknown[] | Promise<unknown[]> {
-    const wasLogEnabled = logEnabled
-    logEnabled = false
-    const promiseOrResult = record(fn, complete)
-    if (promiseOrResult instanceof Promise) {
-      return promiseOrResult.then((r) => {
-        logEnabled = wasLogEnabled
-        return r
-      })
-    } else {
-      logEnabled = wasLogEnabled
-      return promiseOrResult
-    }
+    return silence(() => record(fn, complete))
   }
 
   return {
