@@ -1,4 +1,4 @@
-export default function UnitLogger(initialLogEnabled: boolean = true) {
+export default function UnitLogger(initialLogEnabled = true) {
   /**
    * https://stackoverflow.com/questions/21876461/difference-between-console-log-and-console-debug
    */
@@ -7,7 +7,7 @@ export default function UnitLogger(initialLogEnabled: boolean = true) {
   type LogEntry = [LogLevel, unknown]
 
   let buffer: LogEntry[] = []
-  let logEnabled = initialLogEnabled
+  let logEnabled: boolean = initialLogEnabled
   let recordEnabled = false
 
   function debug(s: unknown) {
@@ -114,11 +114,9 @@ export default function UnitLogger(initialLogEnabled: boolean = true) {
    * The language is meant to evoke that it **collects** the record for itself
    * (i.e. it is not shareing it).
    */
-  function silence<T extends unknown>(fn: () => T): T
+  function silence<T>(fn: () => T): T
   function silence<T extends Promise<unknown>>(fn: () => Promise<T>): T
-  function silence<T extends unknown>(
-    fn: () => T | Promise<T>
-  ): T | Promise<T> {
+  function silence<T>(fn: () => T | Promise<T>): T | Promise<T> {
     const wasLogEnabled = logEnabled
     logEnabled = false
     const promiseOrResult: T | Promise<T> = fn()
